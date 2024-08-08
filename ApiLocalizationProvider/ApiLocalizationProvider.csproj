@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<version></version>
+		<VersionSuffix Condition=" '$(BUILD_NUMBER)' == '' ">pre$([System.DateTime]::Now.ToString("yyyyMMddHHmm"))</VersionSuffix>
+		<title>ApiLocalizationProvider</title>
+		<authors>Youssif_Khairy</authors>
+		<description>Provide apis for localization</description>
+		<DebugType>embedded</DebugType>
+		<IsPackable>true</IsPackable>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageDescription>Provide apis for localization</PackageDescription>
+		<!--<RepositoryUrl>https://github.com/fabrikam-champions/ApiStringLocalizer</RepositoryUrl>-->
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Folder Include="Controllers\" />
+	  <Folder Include="BL\" />
+	  <Folder Include="Extensions\" />
+	</ItemGroup>
+
+	<Target Name="PushToLocalFeed" AfterTargets="Pack">
+		<Exec Command="C:\Nuget\nuget push $(MSBuildProjectDirectory)\$(PackageOutputPath)$(ProjectName).$(Version).nupkg -Source C:\LocalNuGetFeed" />
+	</Target>
+</Project>
