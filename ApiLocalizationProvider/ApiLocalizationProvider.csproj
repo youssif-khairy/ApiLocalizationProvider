@@ -11,7 +11,7 @@
 		<IsPackable>true</IsPackable>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageDescription>Provide apis for localization</PackageDescription>
-		<!--<RepositoryUrl>https://github.com/fabrikam-champions/ApiStringLocalizer</RepositoryUrl>-->
+		<RepositoryUrl>https://github.com/youssif-khairy/ApiLocalizationProvider</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
