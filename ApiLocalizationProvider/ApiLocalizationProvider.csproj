@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<version></version>
 		<VersionSuffix Condition=" '$(BUILD_NUMBER)' == '' ">pre$([System.DateTime]::Now.ToString("yyyyMMddHHmm"))</VersionSuffix>
 		<title>ApiLocalizationProvider</title>
@@ -15,9 +15,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Folder Include="Controllers\" />
-	  <Folder Include="BL\" />
-	  <Folder Include="Extensions\" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.7" />
+	  <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.7" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 	</ItemGroup>
 
 	<Target Name="PushToLocalFeed" AfterTargets="Pack">
