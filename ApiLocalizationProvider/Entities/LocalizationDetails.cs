@@ -125,6 +125,26 @@ namespace ApiLocalizationProvider.Entities
             IsFrontendTranslation = localizationDetails.IsFrontendTranslation;
             ResourceName = localizationDetails.ResourceName;
         }
+        /// <summary>
+        /// CTOR
+        /// </summary>
+        /// <param name="mutatedlocalization"></param>
+        public LocalizationDetails(LocalizationMutatedDetailsDto mutatedlocalization)
+        {
+            Key = mutatedlocalization.Key;
+            OriginalTranslationArabic = mutatedlocalization.OriginalTranslationArabic;
+            OriginalTranslationEnglish = mutatedlocalization.OriginalTranslationEnglish;
+            TranslationArabic = mutatedlocalization.TranslationArabic;
+            TranslationEnglish = mutatedlocalization.TranslationEnglish;
+            Notes = mutatedlocalization.Notes;
+            Description = mutatedlocalization.Description;
+            UsageCount = mutatedlocalization.UsageCount;
+            UsagePaths = mutatedlocalization.UsagePaths;
+            ResourceName = mutatedlocalization.ResourceName;
+            IsFrontendTranslation = mutatedlocalization.IsFrontendTranslation;
+            IsDeleted = mutatedlocalization.IsDeleted;
+            LastUpdatedDate = DateTime.Now;
+        }
         #endregion
 
         #region Actions
@@ -166,6 +186,27 @@ namespace ApiLocalizationProvider.Entities
             LastUpdatedBy = userId;
             LastUpdatedDate = deletionDate;
             IsDeleted = true;
+        }
+
+        /// <summary>
+        /// LocalizationMutatedDetailsDto
+        /// </summary>
+        /// <param name="mutatedlocalization"></param>
+        public void UpdateLocalization(LocalizationMutatedDetailsDto mutatedlocalization)
+        {
+            Key = mutatedlocalization.Key;
+            OriginalTranslationArabic = mutatedlocalization.OriginalTranslationArabic;
+            OriginalTranslationEnglish = mutatedlocalization.OriginalTranslationEnglish;
+            TranslationArabic = mutatedlocalization.TranslationArabic;
+            TranslationEnglish = mutatedlocalization.TranslationEnglish;
+            Notes = mutatedlocalization.Notes;
+            Description = mutatedlocalization.Description;
+            UsageCount = mutatedlocalization.UsageCount;
+            UsagePaths = mutatedlocalization.UsagePaths;
+            ResourceName = mutatedlocalization.ResourceName;    
+            IsFrontendTranslation = mutatedlocalization.IsFrontendTranslation;
+            IsDeleted = mutatedlocalization.IsDeleted;
+            LastUpdatedDate = DateTime.Now;
         }
 
         #endregion

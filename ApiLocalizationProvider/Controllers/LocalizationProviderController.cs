@@ -22,21 +22,20 @@ namespace ApiLocalizationProvider.Controllers
     {
         #region PROPS
         private readonly ILocalizationProviderService _localizationProviderService;
-        private readonly CacheSettings _chacheSettings;
+        private readonly ProviderOptions _providerOptions;
 
         #endregion
 
         #region CTOR
         /// <summary>
-        /// CTOR
+        /// 
         /// </summary>
-        /// <param name="correlationContextAccessor"></param>
         /// <param name="localizationProviderService"></param>
-        /// <param name="chacheSettings"></param>
-        public LocalizationProviderController(ILocalizationProviderService localizationProviderService,IOptions<CacheSettings> chacheSettings)
+        /// <param name="options"></param>
+        public LocalizationProviderController(ILocalizationProviderService localizationProviderService,IOptions<ApiLocalizationProviderOptions> options)
         {
             _localizationProviderService = localizationProviderService;
-            _chacheSettings = chacheSettings.Value;
+            _providerOptions = options.Value.ProviderOptions;
         }
         #endregion
 
@@ -53,11 +52,11 @@ namespace ApiLocalizationProvider.Controllers
 
             var response = await _localizationProviderService.GetLocalizationModuleForFrontend(language);
 
-            if (_chacheSettings.FrontendMaxAge.HasValue)
+            if (_providerOptions.FrontendMaxAge.HasValue)
             {
                 var cacheControl = new CacheControlHeaderValue
                 {
-                    MaxAge = _chacheSettings.FrontendMaxAge
+                    MaxAge = _providerOptions.FrontendMaxAge
                 };
 
                 Response.Headers[HeaderNames.CacheControl] = cacheControl.ToString();
@@ -75,12 +74,12 @@ namespace ApiLocalizationProvider.Controllers
         {
             var response = await _localizationProviderService.GetLocalizationModuleForBackEnd(resourceName,language);
 
-            if (_chacheSettings.BackendMaxAge.HasValue)
+            if (_providerOptions.BackendMaxAge.HasValue)
             {
 
                 var cacheControl = new CacheControlHeaderValue
                 {
-                    MaxAge = _chacheSettings.BackendMaxAge
+                    MaxAge = _providerOptions.BackendMaxAge
                 };
 
                 Response.Headers[HeaderNames.CacheControl] = cacheControl.ToString();

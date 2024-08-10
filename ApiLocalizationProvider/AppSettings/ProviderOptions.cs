@@ -7,10 +7,14 @@ using System.Threading.Tasks;
 namespace ApiLocalizationProvider.AppSettings
 {
     /// <summary>
-    /// CacheSettings
+    /// ProviderOptions
     /// </summary>
-    public class CacheSettings
+    public class ProviderOptions
     {
+        /// <summary>
+        /// ModuleName
+        /// </summary>
+        public string ModuleName { get; set; }
         /// <summary>
         /// BackendMaxAge
         /// </summary>
