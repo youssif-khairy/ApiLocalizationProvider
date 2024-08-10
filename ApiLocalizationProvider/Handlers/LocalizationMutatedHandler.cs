@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace ApiLocalizationProvider.Handlers
 {
-    public class LocalizationMutatedHandler : IMessageHandler<LocalizationMutatedDto>
+    public class LocalizationMutatedHandler : IMessageHandler<LocalizationMutatedWrapperDto>
     {
         #region PROPS
         private readonly ILogger<LocalizationMutatedHandler> _logger;
@@ -35,10 +35,10 @@ namespace ApiLocalizationProvider.Handlers
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public async Task HandleAsync(LocalizationMutatedDto value)
+        public async Task HandleAsync(LocalizationMutatedWrapperDto value)
         {
             var resourcesChanged = new Dictionary<string, List<string>>();
-            foreach (var mutatedlocalization in value.Localizations)
+            foreach (var mutatedlocalization in value.LocalizationMutatedDto.Localizations)
             {
                 var localization = await _dbContext.LocalizationDetails.Where(l => l.Key == mutatedlocalization.Key && l.IsFrontendTranslation == mutatedlocalization.IsFrontendTranslation).FirstOrDefaultAsync();
 
@@ -46,7 +46,8 @@ namespace ApiLocalizationProvider.Handlers
                 {
                     if (!string.IsNullOrEmpty(localization.ResourceName))
                     {
-                        resourcesChanged[localization.ResourceName] = GetResourceChangedCultures(localization, mutatedlocalization, resourcesChanged[localization.ResourceName]);
+                        resourcesChanged[localization.ResourceName] = GetResourceChangedCultures(localization, mutatedlocalization,
+                            resourcesChanged.ContainsKey(localization.ResourceName) ? resourcesChanged[localization.ResourceName] : new List<string>());
 
                     }
                     localization.UpdateLocalization(mutatedlocalization);
@@ -67,38 +68,44 @@ namespace ApiLocalizationProvider.Handlers
                 context.SaveChanges();
             }
 
-            ClearMemoryCacheForChangedResources(resourcesChanged);
+            ClearMemoryCacheForChangedResources(resourcesChanged,value.CacheKey);
         }
 
 
 
-        public void HandleException(Exception ex, string topic, LocalizationMutatedDto value) => _logger.LogError(ex, $"{ex.Message} - {topic} - {System.Text.Json.JsonSerializer.Serialize(value)}");
+        public void HandleException(Exception ex, string topic, LocalizationMutatedWrapperDto value) => _logger.LogError(ex, $"{ex.Message} - {topic} - {System.Text.Json.JsonSerializer.Serialize(value)}");
         #endregion
 
         #region Helpers
-        private void ClearMemoryCacheForChangedResources(Dictionary<string, List<string>> resourcesChanged)
+        private void ClearMemoryCacheForChangedResources(Dictionary<string, List<string>> resourcesChanged,Type CacheKeyDto)
         {
             foreach (var resource in resourcesChanged)
             {
                 foreach (var culture in resource.Value)
                 {
-                    _memoryCache.Remove(new MemoryCacheKey
-                    {
-                        Culture = culture,
-                        ResourceName = resource.Key
-                    });
+
+                   var dto = Activator.CreateInstance(CacheKeyDto);
+
+                    CacheKeyDto.GetProperty(nameof(ApiStringLocalizerCacheKey.Culture)).SetValue(dto, culture);
+
+                    CacheKeyDto.GetProperty(nameof(ApiStringLocalizerCacheKey.ResourceName)).SetValue(dto, resource.Key);
+
+                    _memoryCache.Remove(dto);
                 }
             }
         }
 
         private List<string> GetResourceChangedCultures(LocalizationDetails localization, LocalizationMutatedDetailsDto mutatedlocalization, List<string> addedCultures)
         {
-            if (localization.TranslationArabic != mutatedlocalization.TranslationArabic && !addedCultures.Contains(Languages.Arabic))
-                addedCultures.Add(Languages.Arabic);
-            else if (localization.TranslationEnglish != mutatedlocalization.TranslationEnglish && !addedCultures.Contains(Languages.English))
-                addedCultures.Add(Languages.English);
+            var resultCultures = addedCultures ?? new List<string>();
 
-            return addedCultures;
+            if (localization.TranslationArabic != mutatedlocalization.TranslationArabic && !resultCultures.Contains(Languages.Arabic))
+                resultCultures.Add(Languages.Arabic);
+
+            if (localization.TranslationEnglish != mutatedlocalization.TranslationEnglish && !resultCultures.Contains(Languages.English))
+                resultCultures.Add(Languages.English);
+
+            return resultCultures;
         }
 
         #endregion

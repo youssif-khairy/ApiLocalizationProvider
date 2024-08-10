@@ -21,6 +21,7 @@ namespace ApiLocalizationProvider.Extensions
 {
     public static class ApiLocalizationProviderExtension
     {
+
         public static IServiceCollection AddApiLocalizationProvider<T>(this IServiceCollection services, Action<ApiLocalizationProviderOptions> action) where T : DbContext, ILocaliztionExtensionContext
         {
             if (services == null)
@@ -33,6 +34,7 @@ namespace ApiLocalizationProvider.Extensions
                 throw new ArgumentNullException(nameof(action));
             }
 
+
             services.Configure(action);
 
             AddServices<T>(services);
@@ -42,26 +44,26 @@ namespace ApiLocalizationProvider.Extensions
             return services;
         }
 
-        public static IApplicationBuilder UseApiLocalizationProvider(this IApplicationBuilder app)
+        public static IApplicationBuilder UseApiLocalizationProvider<T>(this IApplicationBuilder app)
         {
             if (app == null)
             {
                 throw new ArgumentNullException(nameof(app));
             }
 
-            SubscribeKafkaTopic(app);
+            SubscribeKafkaTopic<T>(app, GetNewConsumerConfig(app));
 
             return app;
         }
 
 
-        private static void SubscribeKafkaTopic(IApplicationBuilder app)
+        private static void SubscribeKafkaTopic<T>(IApplicationBuilder app, ConsumerConfig consumerConfig)
         {
             Task.Run(() =>
             {
                 using var scope = app.ApplicationServices.CreateScope();
 
-                var _localizationMutatedHandler = scope.ServiceProvider.GetRequiredService<IMessageHandler<LocalizationMutatedDto>>();
+                var _localizationMutatedHandler = scope.ServiceProvider.GetRequiredService<IMessageHandler<LocalizationMutatedWrapperDto>>();
 
 
                 if (_localizationMutatedHandler == null)
@@ -74,7 +76,7 @@ namespace ApiLocalizationProvider.Extensions
 
                 var _logger = scope.ServiceProvider.GetRequiredService<ILogger<ProviderOptions>>();
 
-                using (var c = new ConsumerBuilder<Ignore, string>(options.ConsumerConfig).Build())
+                using (var c = new ConsumerBuilder<Ignore, string>(consumerConfig).Build())
                 {
                     c.Subscribe(options.Topic);
 
@@ -98,7 +100,11 @@ namespace ApiLocalizationProvider.Extensions
 
                                 if (key != null && key.ModuleName == options.ProviderOptions.ModuleName)
                                 {
-                                        _localizationMutatedHandler.HandleAsync(key);
+                                    _localizationMutatedHandler.HandleAsync(new LocalizationMutatedWrapperDto
+                                    {
+                                        CacheKey = typeof(T),
+                                        LocalizationMutatedDto = key
+                                    });
                                 }
                                 _logger.LogInformation($"Consumed '{options.Topic}' message '{consumeResult?.Message?.Value}' at: '{consumeResult?.TopicPartitionOffset}'.");
                             }
@@ -114,6 +120,32 @@ namespace ApiLocalizationProvider.Extensions
                     }
                 }
             });
+        }
+        private static ConsumerConfig GetNewConsumerConfig(IApplicationBuilder app)
+        {
+            var injectConsumerConfig = app.ApplicationServices.GetService<ConsumerConfig>() ?? app.ApplicationServices.GetService<IOptions<ApiLocalizationProviderOptions>>()?.Value.ConsumerConfig;
+            var result = new ConsumerConfig();
+            var uid = Regex.Replace(Convert.ToBase64String(Guid.NewGuid().ToByteArray()), "[/+=]", "");
+            if (injectConsumerConfig != null)
+            {
+                result.GroupId = $"{injectConsumerConfig.GroupId}_{Environment.MachineName}_{uid}";
+                result.BootstrapServers = injectConsumerConfig.BootstrapServers;
+                result.SaslMechanism = injectConsumerConfig.SaslMechanism;
+                result.SecurityProtocol = injectConsumerConfig.SecurityProtocol;
+                result.SslEndpointIdentificationAlgorithm = injectConsumerConfig.SslEndpointIdentificationAlgorithm;
+                result.SslCaLocation = injectConsumerConfig.SslCaLocation;
+                result.SaslUsername = injectConsumerConfig.SaslUsername;
+                result.SaslPassword = injectConsumerConfig.SaslPassword;
+            }
+            else
+            {
+                result.GroupId = $"{Assembly.GetEntryAssembly().GetName().FullName}_{Environment.MachineName}_{uid}";
+            }
+            result.AutoOffsetReset = AutoOffsetReset.Latest;
+            result.EnableAutoCommit = true;
+            result.AllowAutoCreateTopics = true;
+
+            return result;
         }
 
         private static void AddControllers(IServiceCollection services)
@@ -132,9 +164,9 @@ namespace ApiLocalizationProvider.Extensions
 
             services.AddScoped<ILocaliztionExtensionContext>(provider => provider.GetRequiredService<T>());
 
-            services.AddScoped<IMessageHandler<LocalizationMutatedDto>, LocalizationMutatedHandler>();
+            services.AddScoped<IMessageHandler<LocalizationMutatedWrapperDto>, LocalizationMutatedHandler>();
 
-            
+
         }
     }
 }
