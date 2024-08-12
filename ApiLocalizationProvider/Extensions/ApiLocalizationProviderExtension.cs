@@ -1,28 +1,31 @@
-﻿using ApiLocalizationProvider.AppSettings;
-using ApiLocalizationProvider.BL;
+﻿using ApiLocalizationProvider.BL;
 using ApiLocalizationProvider.Controllers;
 using ApiLocalizationProvider.DTO;
+using ApiLocalizationProvider.Filters;
 using ApiLocalizationProvider.Handlers;
 using ApiLocalizationProvider.Infrastructure;
 using Confluent.Kafka;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ApiLocalizationProvider.Extensions
+namespace Microsoft.AspNetCore.Builder
 {
     public static class ApiLocalizationProviderExtension
     {
 
-        public static IServiceCollection AddApiLocalizationProvider<T>(this IServiceCollection services, Action<ApiLocalizationProviderOptions> action) where T : DbContext, ILocaliztionExtensionContext
+        public static IServiceCollection AddApiLocalizationProvider<T>(this IServiceCollection services, Action<ApiLocalizationProviderOptions> action) where T : DbContext
         {
             if (services == null)
             {
@@ -34,14 +37,49 @@ namespace ApiLocalizationProvider.Extensions
                 throw new ArgumentNullException(nameof(action));
             }
 
+            services.AddSwaggerGen(c =>
+            {
+                c.DocumentFilter<CustomDocumentFilter>();
+            });
 
+            string connectionString = GetConnectionString<T>(services);
+
+
+
+                    
+services.Configure<ApiLocalizationProviderOptions>(opts =>
+            {
+                var dbConfig = opts.DBConfigurationOptions;
+
+                dbConfig.ConnectionString = string.IsNullOrEmpty(dbConfig.ConnectionString) ? connectionString : dbConfig.ConnectionString;
+
+                opts.DBConfigurationOptions = dbConfig;
+            });
+            
             services.Configure(action);
+            var options = new ApiLocalizationProviderOptions();
+            action.Invoke(options);
+
+            DBInitializer.Initilaize(connectionString, options.DBConfigurationOptions.Schema).GetAwaiter().GetResult();
 
             AddServices<T>(services);
 
             AddControllers(services);
 
             return services;
+        }
+
+        private static string GetConnectionString<T>(IServiceCollection services) where T : DbContext
+        {
+            var serviceProvider = services.BuildServiceProvider();
+            var dbContextOptions = serviceProvider.GetRequiredService<DbContextOptions<T>>();
+
+            // Extract the connection string from DbContext options if needed
+            var connectionString = dbContextOptions.Extensions
+                .OfType<EntityFrameworkCore.Infrastructure.RelationalOptionsExtension>()
+                .FirstOrDefault()?.ConnectionString;
+
+            return connectionString;
         }
 
         public static IApplicationBuilder UseApiLocalizationProvider<T>(this IApplicationBuilder app)
@@ -51,11 +89,37 @@ namespace ApiLocalizationProvider.Extensions
                 throw new ArgumentNullException(nameof(app));
             }
 
+            app.UseRouting();
+
+            UseCustomRouting(app);
+
+
             SubscribeKafkaTopic<T>(app, GetNewConsumerConfig(app));
 
             return app;
         }
 
+        private static void UseCustomRouting(IApplicationBuilder app)
+        {
+            var options = app.ApplicationServices.GetRequiredService<IOptions<ApiLocalizationProviderOptions>>().Value.ApiRoutesOptions;
+
+            app.UseEndpoints(endpoints =>
+            {
+
+                endpoints.MapControllerRoute(
+                    name: options.FrontendRoute,
+                    pattern: options.FrontendRoute,
+                    defaults: new { controller = "LocalizationProvider", action = "GetLocalizationModuleForFrontend" }
+                );
+
+
+                endpoints.MapControllerRoute(
+                    name: options.BackendRoute,
+                    pattern: options.BackendRoute,
+                    defaults: new { controller = "LocalizationProvider", action = "GetLocalizationModuleForBackEnd" }
+                );
+            });
+        }
 
         private static void SubscribeKafkaTopic<T>(IApplicationBuilder app, ConsumerConfig consumerConfig)
         {
@@ -74,7 +138,7 @@ namespace ApiLocalizationProvider.Extensions
 
                 var options = optionsService.Value;
 
-                var _logger = scope.ServiceProvider.GetRequiredService<ILogger<ProviderOptions>>();
+                var _logger = scope.ServiceProvider.GetRequiredService<ILogger<ApiLocalizationProviderOptions>>();
 
                 using (var c = new ConsumerBuilder<Ignore, string>(consumerConfig).Build())
                 {
@@ -98,7 +162,7 @@ namespace ApiLocalizationProvider.Extensions
                                     _logger.LogDebug(ex, $"Failed to deserialize message to type '{typeof(LocalizationMutatedDto)}'. Message: '{consumeResult?.Message?.Value}'");
                                 }
 
-                                if (key != null && key.ModuleName == options.ProviderOptions.ModuleName)
+                                if (key != null && key.ModuleName == options.ModuleName)
                                 {
                                     _localizationMutatedHandler.HandleAsync(new LocalizationMutatedWrapperDto
                                     {
@@ -157,14 +221,14 @@ namespace ApiLocalizationProvider.Extensions
                 .Add(new AssemblyPart(environmentControllerAssembly));
         }
 
-        private static void AddServices<T>(IServiceCollection services) where T : DbContext, ILocaliztionExtensionContext
+        private static void AddServices<T>(IServiceCollection services) where T : DbContext
         {
 
             services.AddScoped<ILocalizationProviderService, LocalizationProviderService>();
 
-            services.AddScoped<ILocaliztionExtensionContext>(provider => provider.GetRequiredService<T>());
+           services.AddScoped<IMessageHandler<LocalizationMutatedWrapperDto>, LocalizationMutatedHandler>();
 
-            services.AddScoped<IMessageHandler<LocalizationMutatedWrapperDto>, LocalizationMutatedHandler>();
+            services.AddScoped<IDbProvider, DbProvider>();
 
 
         }

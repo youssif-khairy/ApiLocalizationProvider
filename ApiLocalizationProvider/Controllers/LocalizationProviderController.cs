@@ -1,10 +1,10 @@
 ﻿
 
-using ApiLocalizationProvider.AppSettings;
 using ApiLocalizationProvider.BL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Collections.Generic;
@@ -15,14 +15,12 @@ namespace ApiLocalizationProvider.Controllers
     /// <summary>
     /// LocalizationProviderController
     /// </summary>
-    [AllowAnonymous]
-    [Route("provider")]
-    [ApiController]
+    
     public class LocalizationProviderController : ControllerBase
     {
         #region PROPS
         private readonly ILocalizationProviderService _localizationProviderService;
-        private readonly ProviderOptions _providerOptions;
+        private readonly CacheOptions _cacheOptions;
 
         #endregion
 
@@ -35,28 +33,29 @@ namespace ApiLocalizationProvider.Controllers
         public LocalizationProviderController(ILocalizationProviderService localizationProviderService,IOptions<ApiLocalizationProviderOptions> options)
         {
             _localizationProviderService = localizationProviderService;
-            _providerOptions = options.Value.ProviderOptions;
+            _cacheOptions = options.Value.CacheOptions;
         }
         #endregion
 
         #region ACTIONS
 
-        
+
         /// <summary>
         /// </summary>
         /// <returns></returns>
-        [HttpGet("frontend/{language}")]
+        [HttpGet]
+        //[Route("frontend/{language}")]
         [ProducesResponseType(typeof(Dictionary<string, string>), StatusCodes.Status200OK)]
         public async Task<ActionResult<Dictionary<string, string>>> GetLocalizationModuleForFrontend(string language)
         {
 
             var response = await _localizationProviderService.GetLocalizationModuleForFrontend(language);
 
-            if (_providerOptions.FrontendMaxAge.HasValue)
+            if (_cacheOptions.FrontendMaxAge.HasValue)
             {
                 var cacheControl = new CacheControlHeaderValue
                 {
-                    MaxAge = _providerOptions.FrontendMaxAge
+                    MaxAge = _cacheOptions.FrontendMaxAge
                 };
 
                 Response.Headers[HeaderNames.CacheControl] = cacheControl.ToString();
@@ -68,18 +67,19 @@ namespace ApiLocalizationProvider.Controllers
         /// <summary>
         /// </summary>
         /// <returns></returns>
-        [HttpGet("backend/{resourceName}/{language}")]
+        [HttpGet]
+        //[Route("backend/{resourceName}/{language}")]
         [ProducesResponseType(typeof(Dictionary<string, string>), StatusCodes.Status200OK)]
         public async Task<ActionResult<Dictionary<string, string>>> GetLocalizationModuleForBackEnd(string resourceName , string language)
         {
             var response = await _localizationProviderService.GetLocalizationModuleForBackEnd(resourceName,language);
 
-            if (_providerOptions.BackendMaxAge.HasValue)
+            if (_cacheOptions.BackendMaxAge.HasValue)
             {
 
                 var cacheControl = new CacheControlHeaderValue
                 {
-                    MaxAge = _providerOptions.BackendMaxAge
+                    MaxAge = _cacheOptions.BackendMaxAge
                 };
 
                 Response.Headers[HeaderNames.CacheControl] = cacheControl.ToString();

@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<version>1.0.0</version>
+		<version></version>
 		<VersionSuffix Condition=" '$(BUILD_NUMBER)' == '' ">pre$([System.DateTime]::Now.ToString("yyyyMMddHHmm"))</VersionSuffix>
 		<title>ApiLocalizationProvider</title>
 		<authors>Youssif_Khairy</authors>
@@ -23,6 +23,7 @@
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+	  <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.7.0" />
 	</ItemGroup>
 
 	<Target Name="PushToLocalFeed" AfterTargets="Pack">

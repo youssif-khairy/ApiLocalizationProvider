@@ -17,15 +17,15 @@ namespace ApiLocalizationProvider.Handlers
     {
         #region PROPS
         private readonly ILogger<LocalizationMutatedHandler> _logger;
-        private readonly ILocaliztionExtensionContext _dbContext;
+        private readonly IDbProvider _dbProvider;
         private readonly IMemoryCache _memoryCache;
 
         #endregion
         #region CTOR
-        public LocalizationMutatedHandler(ILogger<LocalizationMutatedHandler> logger, ILocaliztionExtensionContext localiztionExtensionContext,IMemoryCache memoryCache)
+        public LocalizationMutatedHandler(ILogger<LocalizationMutatedHandler> logger, IDbProvider dbProvider,IMemoryCache memoryCache)
         {
             _logger = logger;
-            _dbContext = localiztionExtensionContext;
+            _dbProvider = dbProvider;
             _memoryCache = memoryCache;
         }
         #endregion
@@ -40,9 +40,9 @@ namespace ApiLocalizationProvider.Handlers
             var resourcesChanged = new Dictionary<string, List<string>>();
             foreach (var mutatedlocalization in value.LocalizationMutatedDto.Localizations)
             {
-                var localization = await _dbContext.LocalizationDetails.Where(l => l.Key == mutatedlocalization.Key && l.IsFrontendTranslation == mutatedlocalization.IsFrontendTranslation).FirstOrDefaultAsync();
+                var localization = await _dbProvider.GetLocalizationWithKeyAndTypeAsync(mutatedlocalization.Key, mutatedlocalization.IsFrontendTranslation); 
 
-                if (localization != null)
+                if (localization != null && localization.Id != 0)
                 {
                     if (!string.IsNullOrEmpty(localization.ResourceName))
                     {
@@ -51,6 +51,7 @@ namespace ApiLocalizationProvider.Handlers
 
                     }
                     localization.UpdateLocalization(mutatedlocalization);
+                    await _dbProvider.UpdateLocalizationDetailsAsync(localization);
                 }
                 else
                 {
@@ -58,14 +59,8 @@ namespace ApiLocalizationProvider.Handlers
                     {
                         resourcesChanged[mutatedlocalization.ResourceName] = new List<string> { Languages.Arabic, Languages.English };
                     }
-                    _dbContext.LocalizationDetails.Add(new LocalizationDetails(mutatedlocalization));
+                    await _dbProvider.InsertLocalizationDetailsAsync(new LocalizationDetails(mutatedlocalization));
                 }
-            }
-
-            var context = _dbContext as DbContext;
-            if (context != null)
-            {
-                context.SaveChanges();
             }
 
             ClearMemoryCacheForChangedResources(resourcesChanged,value.CacheKey);

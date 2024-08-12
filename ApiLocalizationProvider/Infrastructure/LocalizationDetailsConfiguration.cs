@@ -31,27 +31,20 @@ namespace ApiLocalizationProvider.Infrastructure
             builder.HasKey(x => x.Id);
             builder.Property(e => e.Key).IsRequired().HasColumnType("Nvarchar").HasMaxLength(100);
 
-            builder.Property(e => e.OriginalTranslationEnglish).HasColumnType("Nvarchar").HasMaxLength(255);
-            builder.Property(e => e.OriginalTranslationArabic).HasColumnType("Nvarchar").HasMaxLength(255);
+
 
             builder.Property(e => e.TranslationEnglish).HasColumnType("Nvarchar").HasMaxLength(255);
             builder.Property(e => e.TranslationArabic).HasColumnType("Nvarchar").HasMaxLength(255);
 
-            builder.Property(e => e.Description).HasColumnType("Nvarchar").HasMaxLength(255);
-            builder.Property(e => e.Notes).HasColumnType("Nvarchar").HasMaxLength(255);
-
-            builder.Property(e => e.UsageCount).HasColumnType("int").HasMaxLength(32);
 
             builder.Property(e => e.ResourceName).HasColumnType("Nvarchar").HasMaxLength(512);
 
 
-            builder.Property(e => e.UsagePaths).HasColumnType("Nvarchar").HasMaxLength(512);
 
             builder.Property(e => e.IsFrontendTranslation).HasColumnType("bit");
             builder.Property(e => e.CreationDate).HasColumnType("datetime");
             builder.Property(e => e.LastUpdatedDate).HasColumnType("datetime");
-            builder.Property(e => e.CreatedBy).HasColumnType("Nvarchar").HasMaxLength(50);
-            builder.Property(e => e.LastUpdatedBy).HasColumnType("Nvarchar").HasMaxLength(50);
+
 
             builder.Property(e => e.IsDeleted).HasDefaultValue(false).HasColumnType("bit");
 

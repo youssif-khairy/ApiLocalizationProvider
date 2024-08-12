@@ -16,8 +16,9 @@ namespace ApiLocalizationProvider.BL
     /// </summary>
     public class LocalizationProviderService : ILocalizationProviderService
     {
+        private readonly IDbProvider _dbProvider;
         #region PROPS
-        private readonly ILocaliztionExtensionContext _dbContext;
+
 
         #endregion
 
@@ -26,9 +27,9 @@ namespace ApiLocalizationProvider.BL
         /// CTOR
         /// </summary>
         /// <param name="dbContext"></param>
-        public LocalizationProviderService(ILocaliztionExtensionContext dbContext)
+        public LocalizationProviderService(IDbProvider dbProvider)
         {
-            _dbContext = dbContext;
+            _dbProvider = dbProvider;
         }
 
 
@@ -66,10 +67,7 @@ namespace ApiLocalizationProvider.BL
             if (!isFrontend)
                 moduleWithPostfix = resourceName + ".";
 
-            var translations = await _dbContext.LocalizationDetails
-                .Where(l => !l.IsDeleted && l.IsFrontendTranslation == isFrontend
-                && (isFrontend || (!isFrontend && l.Key.StartsWith(moduleWithPostfix))))
-                .ToListAsync();
+            var translations = await _dbProvider.GetAllLocalizationWithFilterAsync(isFrontend, moduleWithPostfix);
 
             Dictionary<string, string> translationsKeyValue;
 
@@ -79,7 +77,7 @@ namespace ApiLocalizationProvider.BL
                     translationsKeyValue = GetTranslationsKeyValuePair(translations.Select(x => new LocalizationProviderDataDto
                     {
                         Key = isFrontend ? x.Key : x.Key.Substring(moduleWithPostfix.Length),
-                        Value = FillArabicTranslation(x)
+                        Value = x.TranslationArabic
                     }).ToList());
                     break;
 
@@ -87,7 +85,7 @@ namespace ApiLocalizationProvider.BL
                     translationsKeyValue = GetTranslationsKeyValuePair(translations.Select(x => new LocalizationProviderDataDto
                     {
                         Key = isFrontend ? x.Key : x.Key.Substring(moduleWithPostfix.Length),
-                        Value = FillEnglishTranslation(x)
+                        Value = x.TranslationEnglish
                     }).ToList());
                     break;
                 default:
@@ -97,30 +95,6 @@ namespace ApiLocalizationProvider.BL
 
             return translationsKeyValue;
         }
-
-        private string FillArabicTranslation(LocalizationDetails localizationDetails)
-        {
-            if (!string.IsNullOrEmpty(localizationDetails.TranslationArabic))
-            {
-                return localizationDetails.TranslationArabic;
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(localizationDetails.OriginalTranslationArabic))
-                {
-                    return localizationDetails.OriginalTranslationArabic;
-                }
-                else
-                {
-                    return FillEnglishTranslation(localizationDetails);
-                }
-            }
-        }
-        private string FillEnglishTranslation(LocalizationDetails localizationDetails)
-        {
-            return !string.IsNullOrEmpty(localizationDetails.TranslationEnglish) ? localizationDetails.TranslationEnglish : localizationDetails.OriginalTranslationEnglish;
-        }
-
         private Dictionary<string, string> GetTranslationsKeyValuePair(List<LocalizationProviderDataDto> translations)
         {
             var result = new Dictionary<string, string>();

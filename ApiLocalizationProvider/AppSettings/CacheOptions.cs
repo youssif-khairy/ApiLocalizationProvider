@@ -4,17 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApiLocalizationProvider.AppSettings
+namespace Microsoft.Extensions.DependencyInjection
 {
-    /// <summary>
-    /// ProviderOptions
-    /// </summary>
-    public class ProviderOptions
+    public class CacheOptions
     {
-        /// <summary>
-        /// ModuleName
-        /// </summary>
-        public string ModuleName { get; set; }
         /// <summary>
         /// BackendMaxAge
         /// </summary>

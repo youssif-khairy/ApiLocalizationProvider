@@ -5,21 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApiLocalizationProvider.AppSettings
+namespace Microsoft.Extensions.DependencyInjection
 {
     public class ApiLocalizationProviderOptions
     {
-        /// <summary>
-        /// ConsumerConfig
-        /// </summary>
         public ConsumerConfig ConsumerConfig { get; set; }
-        /// <summary>
-        /// Topic
-        /// </summary>
         public string Topic { get; set; } = "INUPCO_Localization_Mutated";
-        /// <summary>
-        /// CacheOptions
-        /// </summary>
-        public ProviderOptions ProviderOptions { get; set; }
+        public string ModuleName { get; set; }
+        public ApiRoutesOptions ApiRoutesOptions { get; set; } = new ApiRoutesOptions();
+        public CacheOptions CacheOptions { get; set; }
+        public DBConfigurationOptions DBConfigurationOptions { get; set; } = new DBConfigurationOptions();
     }
 }
