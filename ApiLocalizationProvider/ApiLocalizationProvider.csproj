@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<version></version>
+		<version>1.0.1</version>
 		<VersionSuffix Condition=" '$(BUILD_NUMBER)' == '' ">pre$([System.DateTime]::Now.ToString("yyyyMMddHHmm"))</VersionSuffix>
 		<title>ApiLocalizationProvider</title>
 		<authors>Youssif_Khairy</authors>
