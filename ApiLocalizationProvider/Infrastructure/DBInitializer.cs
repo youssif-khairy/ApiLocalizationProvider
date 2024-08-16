@@ -32,11 +32,11 @@ namespace ApiLocalizationProvider.Infrastructure
             BEGIN
             CREATE TABLE {tableName}(
 	            [{nameof(LocalizationDetails.Id)}] [bigint] NOT NULL IDENTITY(1,1) PRIMARY KEY,
-                [{nameof(LocalizationDetails.Key)}] [nvarchar](200) NOT NULL,
-	            [{nameof(LocalizationDetails.TranslationEnglish)}] [nvarchar](500) NULL,
-	            [{nameof(LocalizationDetails.TranslationArabic)}] [nvarchar](500) NULL,
+                [{nameof(LocalizationDetails.Key)}] [nvarchar](MAX) NOT NULL,
+	            [{nameof(LocalizationDetails.TranslationEnglish)}] [nvarchar](MAX) NULL,
+	            [{nameof(LocalizationDetails.TranslationArabic)}] [nvarchar](MAX) NULL,
 	            [{nameof(LocalizationDetails.IsFrontendTranslation)}] [bit] NOT NULL,
-	            [{nameof(LocalizationDetails.ResourceName)}] [nvarchar](500) NULL,
+	            [{nameof(LocalizationDetails.ResourceName)}] [nvarchar](MAX) NULL,
 	            [{nameof(LocalizationDetails.IsDeleted)}] bit DEFAULT 0,
 	            [{nameof(LocalizationDetails.CreationDate)}] [date] DEFAULT GETDATE(),
 	            [{nameof(LocalizationDetails.LastUpdatedDate)}] [date] DEFAULT GETDATE())

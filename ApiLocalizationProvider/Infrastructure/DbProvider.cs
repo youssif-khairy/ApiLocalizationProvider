@@ -22,8 +22,8 @@ namespace ApiLocalizationProvider.Infrastructure
         }
         public async Task InsertLocalizationDetailsAsync(LocalizationDetails details)
         {
-            var sql = @"
-        INSERT INTO LocalizationDetails ([Key], TranslationEnglish, TranslationArabic, IsFrontendTranslation, ResourceName, IsDeleted, CreationDate, LastUpdatedDate)
+            var sql = @$"
+        INSERT INTO {_tableName} ([{nameof(LocalizationDetails.Key)}], {nameof(LocalizationDetails.TranslationEnglish)}, {nameof(LocalizationDetails.TranslationArabic)}, {nameof(LocalizationDetails.IsFrontendTranslation)}, {nameof(LocalizationDetails.ResourceName)}, {nameof(LocalizationDetails.IsDeleted)}, {nameof(LocalizationDetails.CreationDate)}, {nameof(LocalizationDetails.LastUpdatedDate)})
         VALUES ( @Key, @TranslationEnglish, @TranslationArabic, @IsFrontendTranslation, @ResourceName, @IsDeleted, @CreationDate, @LastUpdatedDate)";
 
             using (var connection = new SqlConnection(_connectionString))
@@ -46,9 +46,9 @@ namespace ApiLocalizationProvider.Infrastructure
         }
         public async Task UpdateLocalizationDetailsAsync(LocalizationDetails details)
         {
-            var sql = @"
-        UPDATE LocalizationDetails
-        SET TranslationEnglish = @TranslationEnglish, TranslationArabic = @TranslationArabic, IsDeleted = @IsDeleted, LastUpdatedDate = @LastUpdatedDate
+            var sql = @$"
+        UPDATE {_tableName}
+        SET {nameof(LocalizationDetails.TranslationEnglish)} = @TranslationEnglish, {nameof(LocalizationDetails.TranslationArabic)} = @TranslationArabic, {nameof(LocalizationDetails.IsDeleted)} = @IsDeleted, {nameof(LocalizationDetails.LastUpdatedDate)} = @LastUpdatedDate
         WHERE Id = @Id";
 
             using (var connection = new SqlConnection(_connectionString))
@@ -69,11 +69,11 @@ namespace ApiLocalizationProvider.Infrastructure
 
         public async Task<List<LocalizationDetails>> GetAllLocalizationWithFilterAsync( bool isFrontend, string moduleWithPostfix)
         {
-            var sql = @"
-        SELECT * FROM LocalizationDetails
-        WHERE IsDeleted = 0
-        AND IsFrontendTranslation = @IsFrontend
-        AND (@IsFrontend = 1 OR (@IsFrontend = 0 AND [Key] LIKE @ModuleWithPostfix + '%'))";
+            var sql = @$"
+        SELECT * FROM {_tableName}
+        WHERE {nameof(LocalizationDetails.IsDeleted)} = 0
+        AND {nameof(LocalizationDetails.IsFrontendTranslation)} = @IsFrontend
+        AND (@IsFrontend = 1 OR (@IsFrontend = 0 AND [{nameof(LocalizationDetails.Key)}] LIKE @ModuleWithPostfix + '%'))";
 
             var result = new List<LocalizationDetails>();
 
@@ -111,10 +111,10 @@ namespace ApiLocalizationProvider.Infrastructure
 
         public async Task<LocalizationDetails> GetLocalizationWithKeyAndTypeAsync( string key,bool isFrontend)
         {
-            var sql = @"
-        SELECT * FROM LocalizationDetails
-        WHERE [Key] = @Key
-        AND IsFrontendTranslation = @IsFrontendTranslation";
+            var sql = @$"
+        SELECT * FROM {_tableName}
+        WHERE [{nameof(LocalizationDetails.Key)}] = @Key
+        AND {nameof(LocalizationDetails.IsFrontendTranslation)} = @IsFrontendTranslation";
 
             var result = new LocalizationDetails();
 

@@ -12,6 +12,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public ConsumerConfig ConsumerConfig { get; set; }
         public string Topic { get; set; } = "INUPCO_Localization_Mutated";
         public string ModuleName { get; set; }
+        public bool IncludeInSwagger { get; set; } = false;
         public ApiRoutesOptions ApiRoutesOptions { get; set; } = new ApiRoutesOptions();
         public CacheOptions CacheOptions { get; set; }
         public DBConfigurationOptions DBConfigurationOptions { get; set; } = new DBConfigurationOptions();

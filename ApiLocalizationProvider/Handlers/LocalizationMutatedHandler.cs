@@ -2,6 +2,7 @@
 using ApiLocalizationProvider.DTO;
 using ApiLocalizationProvider.Entities;
 using ApiLocalizationProvider.Infrastructure;
+using ApiStringLocalizer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace ApiLocalizationProvider.Handlers
 {
-    public class LocalizationMutatedHandler : IMessageHandler<LocalizationMutatedWrapperDto>
+    public class LocalizationMutatedHandler : IMessageHandler<LocalizationMutatedDto>
     {
         #region PROPS
         private readonly ILogger<LocalizationMutatedHandler> _logger;
@@ -35,10 +36,10 @@ namespace ApiLocalizationProvider.Handlers
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public async Task HandleAsync(LocalizationMutatedWrapperDto value)
+        public async Task HandleAsync(LocalizationMutatedDto value)
         {
             var resourcesChanged = new Dictionary<string, List<string>>();
-            foreach (var mutatedlocalization in value.LocalizationMutatedDto.Localizations)
+            foreach (var mutatedlocalization in value.Localizations)
             {
                 var localization = await _dbProvider.GetLocalizationWithKeyAndTypeAsync(mutatedlocalization.Key, mutatedlocalization.IsFrontendTranslation); 
 
@@ -63,29 +64,26 @@ namespace ApiLocalizationProvider.Handlers
                 }
             }
 
-            ClearMemoryCacheForChangedResources(resourcesChanged,value.CacheKey);
+            ClearMemoryCacheForChangedResources(resourcesChanged);
         }
 
 
 
-        public void HandleException(Exception ex, string topic, LocalizationMutatedWrapperDto value) => _logger.LogError(ex, $"{ex.Message} - {topic} - {System.Text.Json.JsonSerializer.Serialize(value)}");
+        public void HandleException(Exception ex, string topic, LocalizationMutatedDto value) => _logger.LogError(ex, $"{ex.Message} - {topic} - {System.Text.Json.JsonSerializer.Serialize(value)}");
         #endregion
 
         #region Helpers
-        private void ClearMemoryCacheForChangedResources(Dictionary<string, List<string>> resourcesChanged,Type CacheKeyDto)
+        private void ClearMemoryCacheForChangedResources(Dictionary<string, List<string>> resourcesChanged)
         {
             foreach (var resource in resourcesChanged)
             {
                 foreach (var culture in resource.Value)
                 {
-
-                   var dto = Activator.CreateInstance(CacheKeyDto);
-
-                    CacheKeyDto.GetProperty(nameof(ApiStringLocalizerCacheKey.Culture)).SetValue(dto, culture);
-
-                    CacheKeyDto.GetProperty(nameof(ApiStringLocalizerCacheKey.ResourceName)).SetValue(dto, resource.Key);
-
-                    _memoryCache.Remove(dto);
+                    _memoryCache.Remove( new ApiStringLocalizerCacheKey
+                    {
+                        Culture = culture,
+                        ResourceName = resource.Key
+                    });
                 }
             }
         }

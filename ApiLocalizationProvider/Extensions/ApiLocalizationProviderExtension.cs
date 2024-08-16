@@ -37,30 +37,33 @@ namespace Microsoft.AspNetCore.Builder
                 throw new ArgumentNullException(nameof(action));
             }
 
-            services.AddSwaggerGen(c =>
-            {
-                c.DocumentFilter<CustomDocumentFilter>();
-            });
-
             string connectionString = GetConnectionString<T>(services);
 
 
 
-                    
-services.Configure<ApiLocalizationProviderOptions>(opts =>
-            {
-                var dbConfig = opts.DBConfigurationOptions;
 
-                dbConfig.ConnectionString = string.IsNullOrEmpty(dbConfig.ConnectionString) ? connectionString : dbConfig.ConnectionString;
+            services.Configure<ApiLocalizationProviderOptions>(opts =>
+                        {
+                            var dbConfig = opts.DBConfigurationOptions;
 
-                opts.DBConfigurationOptions = dbConfig;
-            });
-            
+                            dbConfig.ConnectionString = string.IsNullOrEmpty(dbConfig.ConnectionString) ? connectionString : dbConfig.ConnectionString;
+
+                            opts.DBConfigurationOptions = dbConfig;
+                        });
+
             services.Configure(action);
             var options = new ApiLocalizationProviderOptions();
             action.Invoke(options);
 
             DBInitializer.Initilaize(connectionString, options.DBConfigurationOptions.Schema).GetAwaiter().GetResult();
+
+            if (options.IncludeInSwagger)
+            {
+                services.AddSwaggerGen(c =>
+                {
+                    c.DocumentFilter<CustomDocumentFilter>();
+                });
+            }
 
             AddServices<T>(services);
 
@@ -82,7 +85,7 @@ services.Configure<ApiLocalizationProviderOptions>(opts =>
             return connectionString;
         }
 
-        public static IApplicationBuilder UseApiLocalizationProvider<T>(this IApplicationBuilder app)
+        public static IApplicationBuilder UseApiLocalizationProvider(this IApplicationBuilder app)
         {
             if (app == null)
             {
@@ -94,7 +97,7 @@ services.Configure<ApiLocalizationProviderOptions>(opts =>
             UseCustomRouting(app);
 
 
-            SubscribeKafkaTopic<T>(app, GetNewConsumerConfig(app));
+            SubscribeKafkaTopic(app, GetNewConsumerConfig(app));
 
             return app;
         }
@@ -108,26 +111,26 @@ services.Configure<ApiLocalizationProviderOptions>(opts =>
 
                 endpoints.MapControllerRoute(
                     name: options.FrontendRoute,
-                    pattern: options.FrontendRoute,
+                    pattern: options.FrontendRoute +"/{language}",
                     defaults: new { controller = "LocalizationProvider", action = "GetLocalizationModuleForFrontend" }
                 );
 
 
                 endpoints.MapControllerRoute(
                     name: options.BackendRoute,
-                    pattern: options.BackendRoute,
+                    pattern: options.BackendRoute + "/{resourceName}/{language}",
                     defaults: new { controller = "LocalizationProvider", action = "GetLocalizationModuleForBackEnd" }
                 );
             });
         }
 
-        private static void SubscribeKafkaTopic<T>(IApplicationBuilder app, ConsumerConfig consumerConfig)
+        private static void SubscribeKafkaTopic(IApplicationBuilder app, ConsumerConfig consumerConfig)
         {
             Task.Run(() =>
             {
                 using var scope = app.ApplicationServices.CreateScope();
 
-                var _localizationMutatedHandler = scope.ServiceProvider.GetRequiredService<IMessageHandler<LocalizationMutatedWrapperDto>>();
+                var _localizationMutatedHandler = scope.ServiceProvider.GetRequiredService<IMessageHandler<LocalizationMutatedDto>>();
 
 
                 if (_localizationMutatedHandler == null)
@@ -164,11 +167,7 @@ services.Configure<ApiLocalizationProviderOptions>(opts =>
 
                                 if (key != null && key.ModuleName == options.ModuleName)
                                 {
-                                    _localizationMutatedHandler.HandleAsync(new LocalizationMutatedWrapperDto
-                                    {
-                                        CacheKey = typeof(T),
-                                        LocalizationMutatedDto = key
-                                    });
+                                    _localizationMutatedHandler.HandleAsync(key);
                                 }
                                 _logger.LogInformation($"Consumed '{options.Topic}' message '{consumeResult?.Message?.Value}' at: '{consumeResult?.TopicPartitionOffset}'.");
                             }
@@ -189,10 +188,9 @@ services.Configure<ApiLocalizationProviderOptions>(opts =>
         {
             var injectConsumerConfig = app.ApplicationServices.GetService<ConsumerConfig>() ?? app.ApplicationServices.GetService<IOptions<ApiLocalizationProviderOptions>>()?.Value.ConsumerConfig;
             var result = new ConsumerConfig();
-            var uid = Regex.Replace(Convert.ToBase64String(Guid.NewGuid().ToByteArray()), "[/+=]", "");
             if (injectConsumerConfig != null)
             {
-                result.GroupId = $"{injectConsumerConfig.GroupId}_{Environment.MachineName}_{uid}";
+                result.GroupId = injectConsumerConfig.GroupId;
                 result.BootstrapServers = injectConsumerConfig.BootstrapServers;
                 result.SaslMechanism = injectConsumerConfig.SaslMechanism;
                 result.SecurityProtocol = injectConsumerConfig.SecurityProtocol;
@@ -203,7 +201,7 @@ services.Configure<ApiLocalizationProviderOptions>(opts =>
             }
             else
             {
-                result.GroupId = $"{Assembly.GetEntryAssembly().GetName().FullName}_{Environment.MachineName}_{uid}";
+                result.GroupId = Assembly.GetEntryAssembly().GetName().FullName;
             }
             result.AutoOffsetReset = AutoOffsetReset.Latest;
             result.EnableAutoCommit = true;
@@ -226,7 +224,7 @@ services.Configure<ApiLocalizationProviderOptions>(opts =>
 
             services.AddScoped<ILocalizationProviderService, LocalizationProviderService>();
 
-           services.AddScoped<IMessageHandler<LocalizationMutatedWrapperDto>, LocalizationMutatedHandler>();
+            services.AddScoped<IMessageHandler<LocalizationMutatedDto>, LocalizationMutatedHandler>();
 
             services.AddScoped<IDbProvider, DbProvider>();
 

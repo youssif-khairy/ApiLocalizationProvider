@@ -44,7 +44,6 @@ namespace ApiLocalizationProvider.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        //[Route("frontend/{language}")]
         [ProducesResponseType(typeof(Dictionary<string, string>), StatusCodes.Status200OK)]
         public async Task<ActionResult<Dictionary<string, string>>> GetLocalizationModuleForFrontend(string language)
         {
@@ -68,7 +67,6 @@ namespace ApiLocalizationProvider.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        //[Route("backend/{resourceName}/{language}")]
         [ProducesResponseType(typeof(Dictionary<string, string>), StatusCodes.Status200OK)]
         public async Task<ActionResult<Dictionary<string, string>>> GetLocalizationModuleForBackEnd(string resourceName , string language)
         {
