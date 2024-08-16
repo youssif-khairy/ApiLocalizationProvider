@@ -25,7 +25,7 @@ namespace ApiLocalizationProvider.Filters
             var backendRoute = _options.ApiRoutesOptions.BackendRoute;
 
 
-            swaggerDoc.Paths.Add($"/{frontendRoute}", new OpenApiPathItem
+            swaggerDoc.Paths.Add($"/{frontendRoute}/{{language}}", new OpenApiPathItem
             {
                 Operations = new Dictionary<OperationType, OpenApiOperation>
                 {
@@ -43,7 +43,7 @@ namespace ApiLocalizationProvider.Filters
                         new OpenApiParameter
                         {
                             Name = "language",
-                            In = ParameterLocation.Query,
+                            In = ParameterLocation.Path,
                             Required = true,
                             Schema = new OpenApiSchema
                             {
@@ -56,7 +56,7 @@ namespace ApiLocalizationProvider.Filters
             });
 
 
-            swaggerDoc.Paths.Add($"/{backendRoute}", new OpenApiPathItem
+            swaggerDoc.Paths.Add($"/{backendRoute}/{{resourceName}}/{{language}}", new OpenApiPathItem
             {
                 Operations = new Dictionary<OperationType, OpenApiOperation>
                 {
@@ -73,7 +73,7 @@ namespace ApiLocalizationProvider.Filters
                         new OpenApiParameter
                         {
                             Name = "resourceName",
-                            In = ParameterLocation.Query,
+                            In = ParameterLocation.Path,
                             Required = true,
                             Schema = new OpenApiSchema
                             {
@@ -83,7 +83,7 @@ namespace ApiLocalizationProvider.Filters
                         new OpenApiParameter
                         {
                             Name = "language",
-                            In = ParameterLocation.Query,
+                            In = ParameterLocation.Path,
                             Required = true,
                             Schema = new OpenApiSchema
                             {
