@@ -91,15 +91,15 @@ namespace ApiLocalizationProvider.Infrastructure
                         {
                             result.Add(new LocalizationDetails
                             {
-                                Id = reader.GetInt64(reader.GetOrdinal("Id")),
-                                Key = reader.GetString(reader.GetOrdinal("Key")),
-                                TranslationEnglish = reader.IsDBNull(reader.GetOrdinal("TranslationEnglish")) ? null : reader.GetString(reader.GetOrdinal("TranslationEnglish")),
-                                TranslationArabic = reader.IsDBNull(reader.GetOrdinal("TranslationArabic")) ? null : reader.GetString(reader.GetOrdinal("TranslationArabic")),
-                                IsFrontendTranslation = reader.GetBoolean(reader.GetOrdinal("IsFrontendTranslation")),
-                                ResourceName = reader.IsDBNull(reader.GetOrdinal("ResourceName")) ? null : reader.GetString(reader.GetOrdinal("ResourceName")),
-                                IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted")),
-                                CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
-                                LastUpdatedDate = reader.GetDateTime(reader.GetOrdinal("LastUpdatedDate"))
+                                Id = reader.GetInt64(reader.GetOrdinal($"{nameof(LocalizationDetails.Id)}")),
+                                Key = reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.Key)}")),
+                                TranslationEnglish = reader.IsDBNull(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationEnglish)}")) ? null : reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationEnglish)}")),
+                                TranslationArabic = reader.IsDBNull(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationArabic)}")) ? null : reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationArabic)}")),
+                                IsFrontendTranslation = reader.GetBoolean(reader.GetOrdinal($"{nameof(LocalizationDetails.IsFrontendTranslation)}")),
+                                ResourceName = reader.IsDBNull(reader.GetOrdinal($"{nameof(LocalizationDetails.ResourceName)}")) ? null : reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.ResourceName)}")),
+                                IsDeleted = reader.GetBoolean(reader.GetOrdinal($"{nameof(LocalizationDetails.IsDeleted)}")),
+                                CreationDate = reader.GetDateTime(reader.GetOrdinal($"{nameof(LocalizationDetails.CreationDate)}")),
+                                LastUpdatedDate = reader.GetDateTime(reader.GetOrdinal($"{nameof(LocalizationDetails.LastUpdatedDate)}"))
                             });
                         }
                     }
@@ -132,15 +132,15 @@ namespace ApiLocalizationProvider.Infrastructure
                         {
                             result = new LocalizationDetails
                             {
-                                Id = reader.GetInt64(reader.GetOrdinal("Id")),
-                                Key = reader.GetString(reader.GetOrdinal("Key")),
-                                TranslationEnglish = reader.IsDBNull(reader.GetOrdinal("TranslationEnglish")) ? null : reader.GetString(reader.GetOrdinal("TranslationEnglish")),
-                                TranslationArabic = reader.IsDBNull(reader.GetOrdinal("TranslationArabic")) ? null : reader.GetString(reader.GetOrdinal("TranslationArabic")),
-                                IsFrontendTranslation = reader.GetBoolean(reader.GetOrdinal("IsFrontendTranslation")),
-                                ResourceName = reader.IsDBNull(reader.GetOrdinal("ResourceName")) ? null : reader.GetString(reader.GetOrdinal("ResourceName")),
-                                IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted")),
-                                CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
-                                LastUpdatedDate = reader.GetDateTime(reader.GetOrdinal("LastUpdatedDate"))
+                                Id = reader.GetInt64(reader.GetOrdinal($"{nameof(LocalizationDetails.Id)}")),
+                                Key = reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.Key)}")),
+                                TranslationEnglish = reader.IsDBNull(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationEnglish)}")) ? null : reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationEnglish)}")),
+                                TranslationArabic = reader.IsDBNull(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationArabic)}")) ? null : reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.TranslationArabic)}")),
+                                IsFrontendTranslation = reader.GetBoolean(reader.GetOrdinal($"{nameof(LocalizationDetails.IsFrontendTranslation)}")),
+                                ResourceName = reader.IsDBNull(reader.GetOrdinal($"{nameof(LocalizationDetails.ResourceName)}")) ? null : reader.GetString(reader.GetOrdinal($"{nameof(LocalizationDetails.ResourceName)}")),
+                                IsDeleted = reader.GetBoolean(reader.GetOrdinal($"{nameof(LocalizationDetails.IsDeleted)}")),
+                                CreationDate = reader.GetDateTime(reader.GetOrdinal($"{nameof(LocalizationDetails.CreationDate)}")),
+                                LastUpdatedDate = reader.GetDateTime(reader.GetOrdinal($"{nameof(LocalizationDetails.LastUpdatedDate)}"))
                             };
 
                         }
